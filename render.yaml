@@ -1,18 +1,23 @@
-# 1. Frontend (Placed at the top to fix parser errors)
-staticSites:
-  - name: uer-vms-frontend
+services:
+  # ==========================================
+  # 1. FRONTEND (Static Site)
+  # ==========================================
+  - type: static
+    name: uer-vms-frontend
     runtime: node
     buildCommand: cd frontend && npm install && npm run build
     publishPath: frontend/dist
     envVars:
+      # We set sync: false so you can paste the PUBLIC https:// URLs manually
+      # This is required because the browser needs public URLs, not internal ones.
       - key: VITE_BACKEND_STATE_A_URL
         sync: false
       - key: VITE_BACKEND_STATE_B_URL
         sync: false
 
-# 2. Backend Services
-services:
-  # Blockchain Service
+  # ==========================================
+  # 2. BLOCKCHAIN SERVICE
+  # ==========================================
   - type: web
     name: uer-vms-blockchain
     runtime: python
@@ -22,18 +27,24 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # AI Service
+  # ==========================================
+  # 3. AI SERVICE (Heavy Calculation)
+  # ==========================================
   - type: web
     name: uer-vms-ai
     runtime: python
+    # We install cmake first to ensure dlib compiles correctly
     buildCommand: |
+      pip install cmake
       pip install -r ai-service/requirements.txt
     startCommand: uvicorn ai-service.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # Backend State A
+  # ==========================================
+  # 4. BACKEND STATE A (Maharashtra)
+  # ==========================================
   - type: web
     name: uer-vms-backend-a
     runtime: python
@@ -44,8 +55,10 @@ services:
         value: STATE_A
       - key: STATE_NAME
         value: Maharashtra
+      # Paste Neon Connection String in Dashboard
       - key: DATABASE_URL
         sync: false
+      # Internal Links (Fast)
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
           name: uer-vms-blockchain
@@ -54,12 +67,15 @@ services:
         fromService:
           name: uer-vms-ai
           property: host
+      # Link to Peer (Set manually to Public URL to avoid circular dep error)
       - key: PEER_BACKEND_URL
         sync: false
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # Backend State B
+  # ==========================================
+  # 5. BACKEND STATE B (Karnataka)
+  # ==========================================
   - type: web
     name: uer-vms-backend-b
     runtime: python
@@ -70,8 +86,10 @@ services:
         value: STATE_B
       - key: STATE_NAME
         value: Karnataka
+      # Paste Neon Connection String in Dashboard
       - key: DATABASE_URL
         sync: false
+      # Internal Links
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
           name: uer-vms-blockchain
@@ -80,6 +98,7 @@ services:
         fromService:
           name: uer-vms-ai
           property: host
+      # Link to Peer
       - key: PEER_BACKEND_URL
         sync: false
       - key: PYTHON_VERSION
