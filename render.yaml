@@ -1,29 +1,24 @@
 services:
-  # ==========================================
   # 1. BLOCKCHAIN SERVICE
-  # ==========================================
   - type: web
     name: uer-vms-blockchain
     runtime: python
-    plan: free                 # <--- CRITICAL FIX FOR PAYMENT ISSUE
     buildCommand: pip install -r blockchain-service/requirements.txt
-    startCommand: uvicorn blockchain-service.main:app --host 0.0.0.0 --port $PORT
+    # CHANGE IS HERE: We cd into the folder first
+    startCommand: cd blockchain-service && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # ==========================================
   # 2. AI SERVICE
-  # ==========================================
   - type: web
     name: uer-vms-ai
     runtime: python
-    plan: free                 # <--- CRITICAL FIX
-    # Install cmake for dlib
     buildCommand: |
       pip install cmake
       pip install -r ai-service/requirements.txt
-    startCommand: uvicorn ai-service.app.main:app --host 0.0.0.0 --port $PORT
+    # CHANGE IS HERE:
+    startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -36,7 +31,7 @@ services:
     runtime: python
     plan: free                 # <--- CRITICAL FIX
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: STATE_ID
         value: STATE_A
@@ -70,7 +65,7 @@ services:
     runtime: python
     plan: free                 # <--- CRITICAL FIX
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: STATE_ID
         value: STATE_B
