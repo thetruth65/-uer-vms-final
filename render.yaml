@@ -15,27 +15,28 @@ services:
     name: uer-vms-ai
     runtime: python
     buildCommand: |
-      # 1. Upgrade build tools
-      pip install --upgrade pip setuptools wheel
-
-      # 2. Install CMake via pip
-      pip install wheel cmake 
+      # 1. Upgrade pip first
+      pip install --upgrade pip
       
-      # 3. Add CMake to PATH manually (Critical Fix for Render)
-      export PATH=$PATH:$(python -c "import site; print(site.USER_BASE)")/bin
+      # 2. Install build dependencies
+      pip install wheel setuptools scikit-build
       
-      # 4. Install Scikit-Build and Numpy
-      pip install scikit-build
-      pip install "numpy<2"
-
-      # 5. Install dlib explicitly from PyPI (Source build on Linux)
-      # We use --no-cache-dir to prevent memory issues
+      # 3. Install CMake and ensure it's in PATH
+      pip install cmake
+      export PATH="$HOME/.local/bin:$(python -c "import site; print(site.USER_BASE)")/bin:$PATH"
+      
+      # 4. Verify CMake is accessible
+      cmake --version || echo "CMake not found in PATH"
+      
+      # 5. Install numpy first (dlib needs it)
+      pip install "numpy<2.0.0"
+      
+      # 6. Install dlib with verbose output
       pip install dlib --no-cache-dir --verbose
       
-      # 6. Install the rest
+      # 7. Install remaining requirements
       pip install -r ai-service/requirements.txt
 
-    # CHANGE IS HERE:
     startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
