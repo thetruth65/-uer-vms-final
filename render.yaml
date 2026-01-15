@@ -14,7 +14,7 @@ services:
   # 2. AI SERVICE (DOCKER RUNTIME)
   # ==========================================
   - type: web
-    name: uer-vms-ai
+    name: uer-vms-ai-v2
     runtime: docker
     plan: free
     # Path to Dockerfile relative to repo root
