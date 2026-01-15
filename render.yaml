@@ -41,10 +41,9 @@ services:
         fromService:
           name: uer-vms-ai
           property: host
+      # We set this manually later to avoid circular dependency errors
       - key: PEER_BACKEND_URL
-        fromService:
-          name: uer-vms-backend-b
-          property: host
+        sync: false
       - key: PYTHON_VERSION
         value: 3.11.0
 
@@ -69,25 +68,21 @@ services:
         fromService:
           name: uer-vms-ai
           property: host
+      # We set this manually later
       - key: PEER_BACKEND_URL
-        fromService:
-          name: uer-vms-backend-a
-          property: host
+        sync: false
       - key: PYTHON_VERSION
         value: 3.11.0
 
-# 5. Frontend (MOVED TO TOP-LEVEL KEY)
+# 5. Frontend (Must be a top-level key)
 staticSites:
   - name: uer-vms-frontend
     runtime: node
     buildCommand: cd frontend && npm install && npm run build
     publishPath: frontend/dist
     envVars:
+      # We must set these manually to the PUBLIC https:// URLs
       - key: VITE_BACKEND_STATE_A_URL
-        fromService:
-          name: uer-vms-backend-a
-          property: host
+        sync: false
       - key: VITE_BACKEND_STATE_B_URL
-        fromService:
-          name: uer-vms-backend-b
-          property: host
+        sync: false
