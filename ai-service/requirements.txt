@@ -1,8 +1,8 @@
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
-dlib>=19.7
+#dlib>=19.7
 face-recognition
-numpy<=2.0.0
+#numpy<=2.0.0
 pillow
 python-multipart>=0.0.6
 scipy>=1.11.4
