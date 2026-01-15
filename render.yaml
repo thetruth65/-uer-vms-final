@@ -5,6 +5,7 @@ services:
   - type: web
     name: uer-vms-blockchain
     runtime: python
+    plan: free                 # <--- CRITICAL FIX FOR PAYMENT ISSUE
     buildCommand: pip install -r blockchain-service/requirements.txt
     startCommand: uvicorn blockchain-service.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -17,6 +18,7 @@ services:
   - type: web
     name: uer-vms-ai
     runtime: python
+    plan: free                 # <--- CRITICAL FIX
     # Install cmake for dlib
     buildCommand: |
       pip install cmake
@@ -32,6 +34,7 @@ services:
   - type: web
     name: uer-vms-backend-a
     runtime: python
+    plan: free                 # <--- CRITICAL FIX
     buildCommand: pip install -r backend/requirements.txt
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -42,15 +45,15 @@ services:
       # Paste Neon Connection String in Dashboard
       - key: DATABASE_URL
         sync: false
-      # Internal Links
+      # Internal Links (Fast & Free)
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
-          type: web             # <--- ADDED THIS
+          type: web
           name: uer-vms-blockchain
           property: host
       - key: AI_SERVICE_URL
         fromService:
-          type: web             # <--- ADDED THIS
+          type: web
           name: uer-vms-ai
           property: host
       # Link to Peer (Set manually to Public URL later)
@@ -65,6 +68,7 @@ services:
   - type: web
     name: uer-vms-backend-b
     runtime: python
+    plan: free                 # <--- CRITICAL FIX
     buildCommand: pip install -r backend/requirements.txt
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -78,12 +82,12 @@ services:
       # Internal Links
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
-          type: web             # <--- ADDED THIS
+          type: web
           name: uer-vms-blockchain
           property: host
       - key: AI_SERVICE_URL
         fromService:
-          type: web             # <--- ADDED THIS
+          type: web
           name: uer-vms-ai
           property: host
       # Link to Peer
