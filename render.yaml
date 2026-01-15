@@ -1,9 +1,8 @@
-services:
-  # ==========================================
-  # 1. FRONTEND (Static Site)
-  # ==========================================
-  - type: static
-    name: uer-vms-frontend
+# ==========================================
+# 1. STATIC SITES (Frontend)
+# ==========================================
+staticSites:
+  - name: uer-vms-frontend
     runtime: node
     buildCommand: cd frontend && npm install && npm run build
     publishPath: frontend/dist
@@ -15,9 +14,11 @@ services:
       - key: VITE_BACKEND_STATE_B_URL
         sync: false
 
-  # ==========================================
-  # 2. BLOCKCHAIN SERVICE
-  # ==========================================
+# ==========================================
+# 2. WEB SERVICES (Backends, AI, Blockchain)
+# ==========================================
+services:
+  # Blockchain Service
   - type: web
     name: uer-vms-blockchain
     runtime: python
@@ -27,9 +28,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # ==========================================
-  # 3. AI SERVICE (Heavy Calculation)
-  # ==========================================
+  # AI Service
   - type: web
     name: uer-vms-ai
     runtime: python
@@ -42,9 +41,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # ==========================================
-  # 4. BACKEND STATE A (Maharashtra)
-  # ==========================================
+  # Backend State A (Maharashtra)
   - type: web
     name: uer-vms-backend-a
     runtime: python
@@ -73,9 +70,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # ==========================================
-  # 5. BACKEND STATE B (Karnataka)
-  # ==========================================
+  # Backend State B (Karnataka)
   - type: web
     name: uer-vms-backend-b
     runtime: python
