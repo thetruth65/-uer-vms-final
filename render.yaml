@@ -1,19 +1,4 @@
 # ==========================================
-# 1. FRONTEND (Static Site)
-# ==========================================
-staticSites:
-  - name: uer-vms-frontend
-    runtime: node
-    buildCommand: cd frontend && npm install && npm run build
-    publishPath: frontend/dist
-    envVars:
-      # We set sync: false so you can paste the PUBLIC https:// URLs manually later
-      - key: VITE_BACKEND_STATE_A_URL
-        sync: false
-      - key: VITE_BACKEND_STATE_B_URL
-        sync: false
-
-# ==========================================
 # 2. BACKEND SERVICES
 # ==========================================
 services:
