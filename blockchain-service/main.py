@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from blockchain import Blockchain
 from uuid import uuid4
 # CRITICAL FIX: Use the full package path for import
-try:
-    # Try importing from the same directory (Local Dev)
-    from .blockchain import Blockchain
-except ImportError:
-    # Try importing from the root package (Render Production)
-    from blockchain_service.blockchain import Blockchain
+# try:
+#     # Try importing from the same directory (Local Dev)
+#     from .blockchain import Blockchain
+# except ImportError:
+#     # Try importing from the root package (Render Production)
+#     from blockchain-service.blockchain import Blockchain
 app = FastAPI()
 blockchain = Blockchain()
 node_identifier = str(uuid4()).replace('-', '')
