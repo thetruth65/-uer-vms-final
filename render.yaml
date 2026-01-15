@@ -19,7 +19,7 @@ services:
       pip install --upgrade pip setuptools wheel
 
       # 2. Install CMake via pip
-      pip install cmake
+      pip install wheel cmake 
       
       # 3. Add CMake to PATH manually (Critical Fix for Render)
       export PATH=$PATH:$(python -c "import site; print(site.USER_BASE)")/bin
