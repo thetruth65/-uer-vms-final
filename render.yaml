@@ -45,10 +45,12 @@ services:
       # Internal Links
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
+          type: web             # <--- ADDED THIS
           name: uer-vms-blockchain
           property: host
       - key: AI_SERVICE_URL
         fromService:
+          type: web             # <--- ADDED THIS
           name: uer-vms-ai
           property: host
       # Link to Peer (Set manually to Public URL later)
@@ -76,10 +78,12 @@ services:
       # Internal Links
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
+          type: web             # <--- ADDED THIS
           name: uer-vms-blockchain
           property: host
       - key: AI_SERVICE_URL
         fromService:
+          type: web             # <--- ADDED THIS
           name: uer-vms-ai
           property: host
       # Link to Peer
