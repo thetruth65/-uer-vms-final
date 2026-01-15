@@ -1,0 +1,65 @@
+services:
+  # 1. The Real Blockchain Service
+  - type: web
+    name: uer-vms-blockchain
+    runtime: python
+    buildCommand: pip install -r blockchain-service/requirements.txt
+    startCommand: uvicorn blockchain-service.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 8000
+
+  # 2. AI Service
+  - type: web
+    name: uer-vms-ai
+    runtime: python
+    buildCommand: |
+      apt-get update && apt-get install -y cmake
+      pip install -r ai-service/requirements.txt
+    startCommand: uvicorn ai-service.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 8000
+
+  # 3. Backend State A
+  - type: web
+    name: uer-vms-backend-a
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: STATE_ID
+        value: STATE_A
+      - key: DATABASE_URL
+        fromDatabase:
+          name: uer-vms-db # Or sync manually with Neon URL
+      - key: BLOCKCHAIN_SERVICE_URL
+        fromService:
+          name: uer-vms-blockchain
+
+  # 4. Backend State B
+  - type: web
+    name: uer-vms-backend-b
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: STATE_ID
+        value: STATE_B
+      - key: BLOCKCHAIN_SERVICE_URL
+        fromService:
+          name: uer-vms-blockchain
+
+  # 5. Frontend
+  - type: web
+    name: uer-vms-frontend
+    runtime: node
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_BACKEND_STATE_A_URL
+        fromService:
+          name: uer-vms-backend-a
+      - key: VITE_BACKEND_STATE_B_URL
+        fromService:
+          name: uer-vms-backend-b

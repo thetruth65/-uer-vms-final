@@ -1,0 +1,183 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for State A
+  postgres-state-a:
+    image: postgres:15-alpine
+    container_name: postgres-state-a
+    environment:
+      POSTGRES_DB: voters_db
+      POSTGRES_USER: voter_admin
+      POSTGRES_PASSWORD: voter_pass_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-state-a-data:/var/lib/postgresql/data
+    networks:
+      - voter-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voter_admin -d voters_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for State B
+  postgres-state-b:
+    image: postgres:15-alpine
+    container_name: postgres-state-b
+    environment:
+      POSTGRES_DB: voters_db
+      POSTGRES_USER: voter_admin
+      POSTGRES_PASSWORD: voter_pass_123
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-state-b-data:/var/lib/postgresql/data
+    networks:
+      - voter-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voter_admin -d voters_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Blockchain Node A (This becomes the SHARED LEDGER for the demo)
+  blockchain-node-a:
+    image: postgres:15-alpine
+    container_name: blockchain-node-a
+    environment:
+      POSTGRES_DB: blockchain_db
+      POSTGRES_USER: blockchain_admin
+      POSTGRES_PASSWORD: blockchain_pass_123
+    ports:
+      - "5434:5432"
+    volumes:
+      - blockchain-a-data:/var/lib/postgresql/data
+    networks:
+      - voter-network
+
+  # Blockchain Node B (Kept running for realism, but unused in this config to solve sync issues)
+  blockchain-node-b:
+    image: postgres:15-alpine
+    container_name: blockchain-node-b
+    environment:
+      POSTGRES_DB: blockchain_db
+      POSTGRES_USER: blockchain_admin
+      POSTGRES_PASSWORD: blockchain_pass_123
+    ports:
+      - "5435:5432"
+    volumes:
+      - blockchain-b-data:/var/lib/postgresql/data
+    networks:
+      - voter-network
+
+  # AI Deduplication Service
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ai-service
+    ports:
+      - "8003:8000"
+    environment:
+      - MODEL_PATH=/app/models
+    volumes:
+      - ai-models:/app/models
+      - ./ai-service:/app
+    networks:
+      - voter-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Backend for State A
+  backend-state-a:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend-state-a
+    ports:
+      - "8001:8000"
+    environment:
+      STATE_ID: "STATE_A"
+      STATE_NAME: "Maharashtra"
+      DATABASE_URL: "postgresql://voter_admin:voter_pass_123@postgres-state-a:5432/voters_db"
+      # Points to Node A
+      BLOCKCHAIN_URL: "postgresql://blockchain_admin:blockchain_pass_123@blockchain-node-a:5432/blockchain_db"
+      AI_SERVICE_URL: "http://ai-service:8000"
+      PEER_BACKEND_URL: "http://backend-state-b:8000"
+    volumes:
+      - ./backend:/app
+      - ./mock-data:/app/mock-data 
+      - voter-photos-a:/app/storage/photos
+    depends_on:
+      postgres-state-a:
+        condition: service_healthy
+      blockchain-node-a:
+        condition: service_started
+      ai-service:
+        condition: service_started
+    networks:
+      - voter-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Backend for State B
+  backend-state-b:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend-state-b
+    ports:
+      - "8002:8000"
+    environment:
+      STATE_ID: "STATE_B"
+      STATE_NAME: "Karnataka"
+      DATABASE_URL: "postgresql://voter_admin:voter_pass_123@postgres-state-b:5432/voters_db"
+      # 👇 THE FIX IS HERE 👇 
+      # Changed from blockchain-node-b to blockchain-node-a so both states see the same data
+      BLOCKCHAIN_URL: "postgresql://blockchain_admin:blockchain_pass_123@blockchain-node-a:5432/blockchain_db"
+      AI_SERVICE_URL: "http://ai-service:8000"
+      PEER_BACKEND_URL: "http://backend-state-a:8000"
+    volumes:
+      - ./backend:/app
+      - ./mock-data:/app/mock-data 
+      - voter-photos-b:/app/storage/photos
+    depends_on:
+      postgres-state-b:
+        condition: service_healthy
+      blockchain-node-b:
+        condition: service_started
+      ai-service:
+        condition: service_started
+    networks:
+      - voter-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5174:5173"
+    environment:
+      - VITE_BACKEND_STATE_A_URL=http://localhost:8001
+      - VITE_BACKEND_STATE_B_URL=http://localhost:8002
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - voter-network
+    command: npm run dev -- --host
+
+volumes:
+  postgres-state-a-data:
+  postgres-state-b-data:
+  blockchain-a-data:
+  blockchain-b-data:
+  ai-models:
+  voter-photos-a:
+  voter-photos-b:
+
+networks:
+  voter-network:
+    driver: bridge

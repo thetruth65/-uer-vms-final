@@ -1,0 +1,32 @@
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+dlib>=19.7
+face-recognition
+numpy<=2.0.0
+pillow
+python-multipart>=0.0.6
+scipy>=1.11.4
+pydantic>=2.5.3
+pydantic-settings>=2.1.0
+jellyfish>=1.0.3
+
+# Note: jellyfish is used for phonetic name matching (Soundex algorithm)
+# It's a pure Python library for approximate string matching
+
+## Installation Order (for manual setup):
+# 1. System dependencies (via apt-get in Dockerfile)
+# 2. pip install face-recognition (this includes dlib which needs cmake)
+# 3. pip install remaining packages
+
+## Alternative if face-recognition fails:
+# You can use a simpler approach with just OpenCV for face detection
+# and skip the encoding comparison. For a hackathon demo, this is acceptable.
+
+# SIMPLIFIED VERSION (if face-recognition installation fails):
+# fastapi==0.109.0
+# uvicorn[standard]==0.27.0
+# opencv-python-headless==4.8.1.78
+# pillow==10.2.0
+# python-multipart==0.0.6
+# jellyfish==1.0.3
+# pydantic==2.5.3
