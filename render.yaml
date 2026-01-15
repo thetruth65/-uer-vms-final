@@ -17,17 +17,17 @@ services:
     buildCommand: |
       # 1. Upgrade build tools
       pip install --upgrade pip setuptools wheel
+
+      # 2. Install CMake via pip
+      pip install cmake
       
-      # 2. Install build dependencies FIRST
-      pip install cmake scikit-build
+      # 3. Add CMake to PATH manually (Critical Fix for Render)
+      export PATH=$PATH:$(python -c "import site; print(site.USER_BASE)")/bin
       
-      # 3. Install Numpy (Required for dlib compilation)
+      # 4. Install Scikit-Build and Numpy
+      pip install scikit-build
       pip install "numpy<2"
-      
-      # 4. Install dlib from source (Linux compatible)
-      # We do this before requirements.txt to ensure it has what it needs
-      pip install dlib
-      
+
       # 5. Install remaining app requirements
       pip install -r ai-service/requirements.txt
     # CHANGE IS HERE:
