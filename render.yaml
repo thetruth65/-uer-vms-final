@@ -32,7 +32,7 @@ services:
       - key: STATE_NAME
         value: Maharashtra
       - key: DATABASE_URL
-        sync: false # You will paste Neon URL in dashboard
+        sync: false
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
           name: uer-vms-blockchain
@@ -40,6 +40,10 @@ services:
       - key: AI_SERVICE_URL
         fromService:
           name: uer-vms-ai
+          property: host
+      - key: PEER_BACKEND_URL
+        fromService:
+          name: uer-vms-backend-b
           property: host
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -56,7 +60,7 @@ services:
       - key: STATE_NAME
         value: Karnataka
       - key: DATABASE_URL
-        sync: false # Paste Neon URL
+        sync: false
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
           name: uer-vms-blockchain
@@ -65,7 +69,6 @@ services:
         fromService:
           name: uer-vms-ai
           property: host
-      # Link to Backend A for transfers
       - key: PEER_BACKEND_URL
         fromService:
           name: uer-vms-backend-a
@@ -73,12 +76,12 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # 5. Frontend
-  - type: static
-    name: uer-vms-frontend
+# 5. Frontend (MOVED TO TOP-LEVEL KEY)
+staticSites:
+  - name: uer-vms-frontend
     runtime: node
     buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
+    publishPath: frontend/dist
     envVars:
       - key: VITE_BACKEND_STATE_A_URL
         fromService:
