@@ -1,37 +1,57 @@
+# ==========================================
+# 1. FRONTEND (Static Site)
+# ==========================================
+staticSites:
+  - name: uer-vms-frontend
+    runtime: node
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: frontend/dist
+    envVars:
+      # We set sync: false so you can paste the PUBLIC https:// URLs manually later
+      - key: VITE_BACKEND_STATE_A_URL
+        sync: false
+      - key: VITE_BACKEND_STATE_B_URL
+        sync: false
+
+# ==========================================
+# 2. BACKEND SERVICES
+# ==========================================
 services:
-  # 1. BLOCKCHAIN SERVICE
+  # ----------------------------------------
+  # BLOCKCHAIN SERVICE
+  # ----------------------------------------
   - type: web
     name: uer-vms-blockchain
     runtime: python
+    plan: free
     buildCommand: pip install -r blockchain-service/requirements.txt
-    # CHANGE IS HERE: We cd into the folder first
     startCommand: cd blockchain-service && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # ==========================================
-  # 2. AI SERVICE (DOCKER RUNTIME)
-  # ==========================================
+  # ----------------------------------------
+  # AI SERVICE (DeepFace)
+  # Switched to Python runtime (No Docker needed for DeepFace -> Low Memory usage)
+  # ----------------------------------------
   - type: web
-    name: uer-vms-ai-v2
-    runtime: docker
+    name: uer-vms-ai
+    runtime: python
     plan: free
-    # Path to Dockerfile relative to repo root
-    dockerfilePath: ./ai-service/Dockerfile
-    # Context allows COPY . . to work correctly inside that folder
-    dockerContext: ./ai-service
+    # Install dependencies (DeepFace, OpenCV, TensorFlow-CPU)
+    buildCommand: pip install -r ai-service/requirements.txt
+    startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PORT
-        value: 8000
+      - key: PYTHON_VERSION
+        value: 3.10.0
 
-  # ==========================================
-  # 3. BACKEND STATE A (Maharashtra)
-  # ==========================================
+  # ----------------------------------------
+  # BACKEND STATE A (Maharashtra)
+  # ----------------------------------------
   - type: web
     name: uer-vms-backend-a
     runtime: python
-    plan: free                 # <--- CRITICAL FIX
+    plan: free
     buildCommand: pip install -r backend/requirements.txt
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -59,13 +79,13 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # ==========================================
-  # 4. BACKEND STATE B (Karnataka)
-  # ==========================================
+  # ----------------------------------------
+  # BACKEND STATE B (Karnataka)
+  # ----------------------------------------
   - type: web
     name: uer-vms-backend-b
     runtime: python
-    plan: free                 # <--- CRITICAL FIX
+    plan: free
     buildCommand: pip install -r backend/requirements.txt
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:

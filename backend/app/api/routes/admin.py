@@ -5,16 +5,14 @@ from sqlalchemy import func
 from app.database.base import get_db
 from app.database.models import Voter, AuditLog
 from app.services.integrity import IntegrityService
+from app.services.blockchain_client import BlockchainClient
 from typing import List
-from app.services.blockchain_client import BlockchainClient # Import this
-
 
 router = APIRouter()
 integrity_service = IntegrityService()
-blockchain_client = BlockchainClient() # Initialize
+blockchain_client = BlockchainClient() # Initialize Blockchain Client
 
-
-# --- PRIVACY HELPERS ---
+# --- PRIVACY HELPERS (Retained for future use/consistency) ---
 def mask_phone(phone: str):
     if not phone or len(phone) < 4: return "N/A"
     return f"{phone[:2]}******{phone[-2:]}"
@@ -32,9 +30,9 @@ async def get_dashboard_stats(
     active_voters = db.query(func.count(Voter.voter_id)).filter(Voter.status == "ACTIVE").scalar()
     voted_voters = db.query(func.count(Voter.voter_id)).filter(Voter.status == "VOTED").scalar()
     
-    # We fetch blocks from the Real Blockchain Service ideally, 
-    # but for dashboard speed, we can use a local counter or fetch from service
-    # For now, returning DB stats
+    # We use local counts for speed, but real blockchain events are fetched in the explorer route
+    # Total blocks approximation:
+    total_blocks = total_voters + voted_voters 
     
     recent_registrations = db.query(Voter).order_by(Voter.created_at.desc()).limit(5).all()
     
@@ -42,11 +40,12 @@ async def get_dashboard_stats(
         "total_voters": total_voters,
         "active_voters": active_voters,
         "voted_voters": voted_voters,
-        "total_blockchain_blocks": total_voters + voted_voters, # Approx count for demo
+        "total_blockchain_blocks": total_blocks, 
         "recent_registrations": [
             {
                 "voter_id": v.voter_id,
-                "name": f"{v.first_name} {v.last_name[0]}.", # Privacy: First Name + Last Initial
+                # Privacy: Show First Name + Last Initial only
+                "name": f"{v.first_name} {v.last_name[0]}.", 
                 "registered_at": v.created_at
             }
             for v in recent_registrations
@@ -75,7 +74,15 @@ async def run_integrity_check(
             "name": f"{voter.first_name} {voter.last_name}", # Full name visible only to Admin
             "status": result["status"],
             "details": result["details"],
-            "hash_mismatch": result.get("status") == "TAMPERED"
+            
+            # --- CRITICAL FIX START ---
+            # Explicitly return hashes so the Attack Modal can display them
+            "local_hash": result.get("local_hash"),
+            "chain_hash": result.get("chain_hash"),
+            
+            # Update mismatch flag to include simulated attacks
+            "hash_mismatch": result.get("status") in ["TAMPERED", "SIMULATED_TAMPERING"]
+            # --- CRITICAL FIX END ---
         })
         
     return report
@@ -99,6 +106,7 @@ async def simulate_hack(
     
     # We deliberately DO NOT update the blockchain_hash column or call the blockchain
     # This ensures the hashes will mismatch in the Integrity Check
+    # We add metadata so the IntegrityService knows it's a simulation (optional but good for logs)
     voter.voter_metadata = {"hacked": True, "original_address": original_address}
     
     db.commit()
@@ -108,13 +116,12 @@ async def simulate_hack(
         "blockchain_status": "Unchanged"
     }
 
-
-# [NEW] Restore this endpoint so Frontend doesn't crash
 @router.get("/blockchain/explorer")
 async def blockchain_explorer():
     """
     Proxy request to Real Blockchain Service and format for Frontend
     """
+    # Fetch real chain from Python Blockchain Service
     raw_chain_data = await blockchain_client.get_full_chain()
     chain = raw_chain_data.get("chain", [])
     
