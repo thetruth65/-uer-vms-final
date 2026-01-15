@@ -19,5 +19,7 @@ Thumbs.db
 *.log
 
 # Project Specific
-face_encodings.json
+ai-service/storage/face_encodings.json
 
+backend/storage/photos/*
+.env

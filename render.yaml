@@ -1,25 +1,25 @@
 services:
-  # 1. The Real Blockchain Service
+  # 1. Blockchain Service
   - type: web
     name: uer-vms-blockchain
     runtime: python
     buildCommand: pip install -r blockchain-service/requirements.txt
     startCommand: uvicorn blockchain-service.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PORT
-        value: 8000
+      - key: PYTHON_VERSION
+        value: 3.11.0
 
-  # 2. AI Service
+  # 2. AI Service (Heavy Build)
   - type: web
     name: uer-vms-ai
     runtime: python
+    # Installing cmake and opencv dependencies
     buildCommand: |
-      apt-get update && apt-get install -y cmake
       pip install -r ai-service/requirements.txt
     startCommand: uvicorn ai-service.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PORT
-        value: 8000
+      - key: PYTHON_VERSION
+        value: 3.11.0
 
   # 3. Backend State A
   - type: web
@@ -30,12 +30,20 @@ services:
     envVars:
       - key: STATE_ID
         value: STATE_A
+      - key: STATE_NAME
+        value: Maharashtra
       - key: DATABASE_URL
-        fromDatabase:
-          name: uer-vms-db # Or sync manually with Neon URL
+        sync: false # You will paste Neon URL in dashboard
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
           name: uer-vms-blockchain
+          property: url
+      - key: AI_SERVICE_URL
+        fromService:
+          name: uer-vms-ai
+          property: url
+      - key: PYTHON_VERSION
+        value: 3.11.0
 
   # 4. Backend State B
   - type: web
@@ -46,9 +54,25 @@ services:
     envVars:
       - key: STATE_ID
         value: STATE_B
+      - key: STATE_NAME
+        value: Karnataka
+      - key: DATABASE_URL
+        sync: false # Paste Neon URL
       - key: BLOCKCHAIN_SERVICE_URL
         fromService:
           name: uer-vms-blockchain
+          property: url
+      - key: AI_SERVICE_URL
+        fromService:
+          name: uer-vms-ai
+          property: url
+      # Link to Backend A for transfers
+      - key: PEER_BACKEND_URL
+        fromService:
+          name: uer-vms-backend-a
+          property: url
+      - key: PYTHON_VERSION
+        value: 3.11.0
 
   # 5. Frontend
   - type: web
@@ -60,6 +84,8 @@ services:
       - key: VITE_BACKEND_STATE_A_URL
         fromService:
           name: uer-vms-backend-a
+          property: url
       - key: VITE_BACKEND_STATE_B_URL
         fromService:
           name: uer-vms-backend-b
+          property: url
