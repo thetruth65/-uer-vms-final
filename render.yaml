@@ -15,26 +15,10 @@ services:
     name: uer-vms-ai
     runtime: python
     buildCommand: |
-      # 1. Upgrade pip first
       pip install --upgrade pip
-      
-      # 2. Install build dependencies
-      pip install wheel setuptools scikit-build
-      
-      # 3. Install CMake and ensure it's in PATH
-      pip install cmake
-      export PATH="$HOME/.local/bin:$(python -c "import site; print(site.USER_BASE)")/bin:$PATH"
-      
-      # 4. Verify CMake is accessible
-      cmake --version || echo "CMake not found in PATH"
-      
-      # 5. Install numpy first (dlib needs it)
       pip install "numpy<2.0.0"
-      
-      # 6. Install dlib with verbose output
-      pip install dlib --no-cache-dir --verbose
-      
-      # 7. Install remaining requirements
+      # Try to install pre-built dlib wheel
+      pip install https://github.com/z-mahmud22/Dlib_Windows_Python3.x/raw/main/dlib-19.24.1-cp310-cp310-linux_x86_64.whl || echo "Pre-built wheel failed"
       pip install -r ai-service/requirements.txt
 
     startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
