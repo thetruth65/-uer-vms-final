@@ -15,12 +15,21 @@ services:
     name: uer-vms-ai
     runtime: python
     buildCommand: |
-      pip install --upgrade pip
-      pip install cmake
-      pip install scikit-build
-      pip install https://github.com/z-mahmud22/Dlib_Windows_Python3.x/raw/main/dlib-19.22.99-cp310-cp310-win_amd64.whl
+      # 1. Upgrade build tools
+      pip install --upgrade pip setuptools wheel
+      
+      # 2. Install build dependencies FIRST
+      pip install cmake scikit-build
+      
+      # 3. Install Numpy (Required for dlib compilation)
+      pip install "numpy<2"
+      
+      # 4. Install dlib from source (Linux compatible)
+      # We do this before requirements.txt to ensure it has what it needs
+      pip install dlib
+      
+      # 5. Install remaining app requirements
       pip install -r ai-service/requirements.txt
-      pip install "numpy==1.26.4" --force-reinstall --no-cache-dir
     # CHANGE IS HERE:
     startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
