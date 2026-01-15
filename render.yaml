@@ -1,5 +1,18 @@
+# 1. Frontend (Placed at the top to fix parser errors)
+staticSites:
+  - name: uer-vms-frontend
+    runtime: node
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: frontend/dist
+    envVars:
+      - key: VITE_BACKEND_STATE_A_URL
+        sync: false
+      - key: VITE_BACKEND_STATE_B_URL
+        sync: false
+
+# 2. Backend Services
 services:
-  # 1. Blockchain Service
+  # Blockchain Service
   - type: web
     name: uer-vms-blockchain
     runtime: python
@@ -9,7 +22,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # 2. AI Service
+  # AI Service
   - type: web
     name: uer-vms-ai
     runtime: python
@@ -20,7 +33,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # 3. Backend State A
+  # Backend State A
   - type: web
     name: uer-vms-backend-a
     runtime: python
@@ -41,13 +54,12 @@ services:
         fromService:
           name: uer-vms-ai
           property: host
-      # We set this manually later to avoid circular dependency errors
       - key: PEER_BACKEND_URL
         sync: false
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # 4. Backend State B
+  # Backend State B
   - type: web
     name: uer-vms-backend-b
     runtime: python
@@ -68,21 +80,7 @@ services:
         fromService:
           name: uer-vms-ai
           property: host
-      # We set this manually later
       - key: PEER_BACKEND_URL
         sync: false
       - key: PYTHON_VERSION
         value: 3.11.0
-
-# 5. Frontend (Must be a top-level key)
-staticSites:
-  - name: uer-vms-frontend
-    runtime: node
-    buildCommand: cd frontend && npm install && npm run build
-    publishPath: frontend/dist
-    envVars:
-      # We must set these manually to the PUBLIC https:// URLs
-      - key: VITE_BACKEND_STATE_A_URL
-        sync: false
-      - key: VITE_BACKEND_STATE_B_URL
-        sync: false
