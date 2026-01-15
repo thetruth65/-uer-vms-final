@@ -10,21 +10,20 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # 2. AI SERVICE
+  # ==========================================
+  # 2. AI SERVICE (DOCKER RUNTIME)
+  # ==========================================
   - type: web
     name: uer-vms-ai
-    runtime: python
-    buildCommand: |
-      pip install --upgrade pip
-      pip install "numpy<2.0.0"
-      # Try to install pre-built dlib wheel
-      pip install https://github.com/z-mahmud22/Dlib_Windows_Python3.x/raw/main/dlib-19.24.1-cp310-cp310-linux_x86_64.whl || echo "Pre-built wheel failed"
-      pip install -r ai-service/requirements.txt
-
-    startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    runtime: docker
+    plan: free
+    # Path to Dockerfile relative to repo root
+    dockerfilePath: ./ai-service/Dockerfile
+    # Context allows COPY . . to work correctly inside that folder
+    dockerContext: ./ai-service
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.0
+      - key: PORT
+        value: 8000
 
   # ==========================================
   # 3. BACKEND STATE A (Maharashtra)
