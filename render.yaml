@@ -18,12 +18,14 @@ services:
       pip install --upgrade pip
       pip install cmake
       pip install scikit-build
+      pip install https://github.com/z-mahmud22/Dlib_Windows_Python3.x/raw/main/dlib-19.22.99-cp310-cp310-win_amd64.whl
       pip install -r ai-service/requirements.txt
+      pip install "numpy==1.26.4" --force-reinstall --no-cache-dir
     # CHANGE IS HERE:
     startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.10.0
 
   # ==========================================
   # 3. BACKEND STATE A (Maharashtra)
