@@ -28,8 +28,13 @@ services:
       pip install scikit-build
       pip install "numpy<2"
 
-      # 5. Install remaining app requirements
+      # 5. Install dlib explicitly from PyPI (Source build on Linux)
+      # We use --no-cache-dir to prevent memory issues
+      pip install dlib --no-cache-dir --verbose
+      
+      # 6. Install the rest
       pip install -r ai-service/requirements.txt
+
     # CHANGE IS HERE:
     startCommand: cd ai-service && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
