@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, Vote, Database } from 'lucide-react';
+import { BarChart3, Users, Vote, Database, Wifi } from 'lucide-react';
 import { api } from '../services/api';
 import StatusBadge from '../components/common/StatusBadge';
 import IntegrityCheck from '../components/Admin/IntegrityCheck';
+import { useNetwork } from '../contexts/NetworkContext';
+import { ALL_STATES } from '../config/states';
 
 export default function AdminDashboard() {
-  const [selectedState, setSelectedState] = useState('STATE_A');
+  const { activeStates } = useNetwork();
+  const [selectedState, setSelectedState] = useState('');
   const [stats, setStats] = useState<any>(null);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    loadData();
+    if (activeStates.length > 0 && !selectedState) {
+      setSelectedState(activeStates[0].id);
+    }
+  }, [activeStates]);
+
+  useEffect(() => {
+    if (selectedState) {
+      loadData();
+    }
   }, [selectedState]);
   
   const loadData = async () => {
@@ -47,14 +58,21 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="mb-8 flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Connected to: {activeStates.find(s => s.id === selectedState)?.name || '...'} Node
+          </p>
+        </div>
         <select
           value={selectedState}
           onChange={(e) => setSelectedState(e.target.value)}
           className="input-field w-auto"
+          disabled={activeStates.length === 0}
         >
-          <option value="STATE_A">Maharashtra</option>
-          <option value="STATE_B">Karnataka</option>
+          {activeStates.map(state => (
+            <option key={state.id} value={state.id}>{state.name} (Port {state.port})</option>
+          ))}
         </select>
       </div>
       
@@ -102,7 +120,7 @@ export default function AdminDashboard() {
                     <StatusBadge status={block.event_type} />
                   </td>
                   <td className="px-4 py-3 text-sm font-mono">{block.voter_id ? block.voter_id.substring(0, 8) + '...' : '-'}</td>
-                  <td className="px-4 py-3 text-sm">{block.owner_state}</td>
+                  <td className="px-4 py-3 text-sm">{ALL_STATES.find(s => s.id === block.owner_state)?.name || block.owner_state}</td>
                   <td className="px-4 py-3 text-sm text-gray-500">{new Date(block.timestamp * 1000).toLocaleString()}</td>
                 </tr>
               )) : (

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, AlertCircle, CheckCircle } from 'lucide-react';
+import { Camera, Upload, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
 import StepIndicator from '../components/Registration/StepIndicator';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { api } from '../services/api';
 import type { VoterRegistrationData } from '../types';
+import { useNetwork } from '../contexts/NetworkContext';
 
 const registrationSteps = [
   { id: 1, title: 'Personal Details', description: 'Basic information' },
@@ -38,9 +39,26 @@ export default function RegistrationPage() {
     email: '',
   });
   
+  const { activeStates, isScanning } = useNetwork();
+  
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
-  const [selectedState, setSelectedState] = useState('STATE_A');
+  const [selectedState, setSelectedState] = useState(activeStates.length > 0 ? activeStates[0].id : 'STATE_A');
+
+  // Ensure default selection when network scans finish
+  React.useEffect(() => {
+    if (activeStates.length > 0) {
+      if (!selectedState || !activeStates.find(s => s.id === selectedState)) {
+        setSelectedState(activeStates[0].id);
+        setFormData(prev => ({ ...prev, state: activeStates[0].name }));
+      } else {
+        const stateObj = activeStates.find(s => s.id === selectedState);
+        if (stateObj) {
+            setFormData(prev => ({ ...prev, state: stateObj.name }));
+        }
+      }
+    }
+  }, [activeStates, selectedState]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -202,7 +220,7 @@ export default function RegistrationPage() {
                   address_line1: '',
                   address_line2: '',
                   city: '',
-                  state: 'Maharashtra',
+                  state: '',
                   pincode: '',
                   phone_number: '',
                   email: '',
@@ -233,23 +251,45 @@ export default function RegistrationPage() {
         </p>
         
         {/* State Selection */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Registration State
-          </label>
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Select Registration State (Auto-Discovered Nodes)
+            </label>
+            {isScanning ? (
+              <span className="flex items-center text-xs text-blue-600">
+                <LoadingSpinner message="Scanning..." />
+              </span>
+            ) : activeStates.length > 0 ? (
+              <span className="flex items-center text-xs text-green-600 font-medium">
+                <Wifi className="w-3 h-3 mr-1" /> {activeStates.length} Nodes Online
+              </span>
+            ) : (
+              <span className="flex items-center text-xs text-red-600 font-medium">
+                <WifiOff className="w-3 h-3 mr-1" /> No Nodes Detected
+              </span>
+            )}
+          </div>
           <select
             value={selectedState}
             onChange={(e) => {
-              setSelectedState(e.target.value);
+              const stateId = e.target.value;
+              const stateObj = activeStates.find(s => s.id === stateId);
+              setSelectedState(stateId);
               setFormData(prev => ({
                 ...prev,
-                state: e.target.value === 'STATE_A' ? 'Maharashtra' : 'Karnataka'
+                state: stateObj ? stateObj.name : ''
               }));
             }}
             className="input-field"
+            disabled={activeStates.length === 0}
           >
-            <option value="STATE_A">Maharashtra (State A)</option>
-            <option value="STATE_B">Karnataka (State B)</option>
+            {activeStates.length === 0 && <option value="">Loading Network...</option>}
+            {activeStates.map(state => (
+              <option key={state.id} value={state.id}>
+                {state.name} (Port {state.port})
+              </option>
+            ))}
           </select>
         </div>
         

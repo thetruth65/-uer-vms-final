@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { UserPlus, ArrowLeftRight, Vote, Shield, Zap, Globe } from 'lucide-react';
+import { useNetwork } from '../contexts/NetworkContext';
 
 export default function HomePage() {
+  const { activeStates, isScanning } = useNetwork();
   const features = [
     {
       icon: Shield,
@@ -88,7 +90,9 @@ export default function HomePage() {
       <div className="mt-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
         <div className="grid md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-4xl font-bold mb-2">2</div>
+            <div className="text-4xl font-bold mb-2">
+              {isScanning ? '...' : activeStates.length}
+            </div>
             <div className="text-blue-100">States Connected</div>
           </div>
           <div>

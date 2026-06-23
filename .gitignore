@@ -20,6 +20,20 @@ Thumbs.db
 
 # Project Specific
 ai-service/storage/face_encodings.json
+backend/storage/
+storage/
 
-backend/storage/photos/*
+# Ignore uploaded biometric photos
+*.jpg
+*.jpeg
+
+# Environment Variables
 .env
+
+# Test Scripts
+test_*.py
+
+# Local Documentation and Notes (Keep README.md)
+*analysis*.md
+*improvement*.md
+*workflow*.md

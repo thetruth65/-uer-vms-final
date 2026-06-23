@@ -98,7 +98,7 @@ async def check_duplicate(request: DedupCheckRequest):
         confidence_score=0.0,
         match_type="NONE",
         details={
-            'faces_searched': len(face_service.encodings_db),
+            'faces_searched': face_service.get_total_encodings(),
             'message': 'No duplicate found'
         }
     )
@@ -134,13 +134,19 @@ async def store_face_encoding(request: StoreEncodingRequest):
         "success": True,
         "voter_id": request.voter_id,
         "message": "Face encoding stored successfully",
-        "total_encodings": len(face_service.encodings_db)
+        "total_encodings": face_service.get_total_encodings()
     }
+
+@router.delete("/dedup/remove/{voter_id}")
+async def remove_face_encoding(voter_id: str):
+    """Remove face encoding if registration fails"""
+    face_service.delete_encoding(voter_id)
+    return {"success": True, "message": "Face encoding removed"}
 
 @router.get("/health")
 async def health_check():
     return {
         "status": "healthy",
         "service": "AI Deduplication Service",
-        "total_face_encodings": len(face_service.encodings_db)
+        "total_face_encodings": face_service.get_total_encodings()
     }

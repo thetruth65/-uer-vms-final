@@ -8,6 +8,7 @@ from app.services.ai_dedup import AIDedupService
 from app.services.blockchain_client import BlockchainClient
 from app.services.integrity import IntegrityService
 from app.core.config import settings
+from app.core.events import pubsub_manager
 from datetime import datetime
 import base64
 
@@ -23,6 +24,15 @@ async def check_voting_eligibility(
 ):
     """Check if voter is eligible to vote (With Bi-Directional Sync)"""
     
+    # 0. Redis Cache Check (O(1) Fast Path)
+    if pubsub_manager.redis_client:
+        try:
+            cached_status = pubsub_manager.redis_client.get(f"voter_status:{voter_id}")
+            if cached_status == "VOTED":
+                return {"eligible": False, "reason": "Already voted (Cached)"}
+        except Exception as e:
+            print(f"⚠️ Redis Cache Error: {e}")
+            
     # 1. Local Check
     voter = db.query(Voter).filter(Voter.voter_id == voter_id).first()
     
@@ -126,6 +136,7 @@ async def cast_vote(
         is_valid = True
         
     if not is_valid:
+        print(f"❌ AI REJECTED: Expected {voter_id}, Got {matched_id} with {face_conf} confidence")
         raise HTTPException(status_code=401, detail="Biometric Verification Failed")
 
     # 3. Check Blockchain for Double Vote
@@ -177,7 +188,17 @@ async def cast_vote(
         status="SUCCESS"
     )
     db.add(audit_log)
+    db.add(audit_log)
     db.commit()
+    
+    # 7. Cache Vote Status in Redis
+    if pubsub_manager.redis_client:
+        try:
+            # Cache for 24 hours (86400 seconds)
+            pubsub_manager.redis_client.setex(f"voter_status:{voter_id}", 86400, "VOTED")
+            print("💾 Voted status cached in Redis")
+        except Exception as e:
+            print(f"⚠️ Redis Cache Error: {e}")
     
     return VoteResponse(
         voter_id=voter_id,

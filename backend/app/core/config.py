@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
     BLOCKCHAIN_URL: str = "" # Optional default to prevent crash
+    REDIS_URL: Optional[str] = None
     
     # Services
     AI_SERVICE_URL: str
@@ -45,6 +46,12 @@ class Settings(BaseSettings):
             # We assume https for external or http for internal.
             # Safe bet for internal render links is http://{host}
             return f"http://{v}"
+        return v
+        
+    @validator("STATE_ID", "STATE_NAME", pre=True)
+    def strip_whitespace(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.strip()
         return v
 
 settings = Settings()

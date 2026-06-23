@@ -76,3 +76,13 @@ class AIDedupService:
         except Exception as e:
             print(f"Store encoding error: {str(e)}")
             return {"success": False, "error": str(e)}
+
+    async def delete_face_encoding(self, voter_id: str) -> Dict:
+        """Delete face encoding if registration fails"""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.delete(f"{self.ai_service_url}/api/dedup/remove/{voter_id}")
+                return response.json()
+        except Exception as e:
+            print(f"Delete encoding error: {str(e)}")
+            return {"success": False, "error": str(e)}

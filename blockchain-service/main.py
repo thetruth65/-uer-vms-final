@@ -26,6 +26,12 @@ def full_chain():
         "is_valid": blockchain.check_integrity()
     }
 
+@app.post("/reset")
+def reset_chain():
+    global blockchain
+    blockchain = Blockchain()
+    return {"message": "Blockchain reset to genesis block"}
+
 @app.post("/transactions/new")
 def new_transaction(tx: Transaction):
     index = blockchain.new_transaction(tx.sender, tx.recipient, tx.data)
@@ -35,6 +41,12 @@ def new_transaction(tx: Transaction):
     proof = blockchain.proof_of_work(last_proof)
     previous_hash = blockchain.hash(last_block)
     block = blockchain.new_block(proof, previous_hash)
+    
+    event_type = tx.data.get('event_type', 'UNKNOWN')
+    voter_id = tx.data.get('voter_id', 'UNKNOWN')
+    print(f"\n[{event_type}] Mined Block #{block['index']} for Voter {voter_id}")
+    print(f"Transaction Hash: {blockchain.hash(block)}")
+    print(f"Sender: {tx.sender} -> Recipient: {tx.recipient}\n")
     
     return {"message": "Transaction added and Block Mined", "block_index": block['index'], "transaction_hash": blockchain.hash(block)}
 

@@ -1,0 +1,274 @@
+version: '3.8'
+
+x-backend-base: &backend-base
+  build: ./backend
+  restart: always
+  environment:
+    - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/electoral_system}
+    - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+    - AI_SERVICE_URL=http://ai-service:8001
+    - BLOCKCHAIN_SERVICE_URL=http://blockchain-service:5000
+    - CORS_ORIGINS=*
+  depends_on:
+    - ai-service
+    - blockchain-service
+
+services:
+  # -----------------------------------
+  # Core Infrastructure
+  # -----------------------------------
+  blockchain-service:
+    build: ./blockchain-service
+    ports:
+      - "5000:5000"
+    restart: always
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8001:8001"
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          memory: 2G
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_NODE_URLS=http://localhost:8000,http://localhost:8002,http://localhost:8004,http://localhost:8006,http://localhost:8008,http://localhost:8010,http://localhost:8012,http://localhost:8014,http://localhost:8016,http://localhost:8018,http://localhost:8020,http://localhost:8022,http://localhost:8024,http://localhost:8026,http://localhost:8028,http://localhost:8030,http://localhost:8032,http://localhost:8034,http://localhost:8036,http://localhost:8038,http://localhost:8040,http://localhost:8042,http://localhost:8044,http://localhost:8046,http://localhost:8048,http://localhost:8050,http://localhost:8052,http://localhost:8054
+    depends_on:
+      - state-a
+      - state-b
+      - state-c
+
+  # -----------------------------------
+  # 28 State Nodes
+  # -----------------------------------
+  state-a:
+    <<: *backend-base
+    ports: [ "8000:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_A
+      STATE_NAME: Delhi
+
+  state-b:
+    <<: *backend-base
+    ports: [ "8002:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_B
+      STATE_NAME: Maharashtra
+
+  state-c:
+    <<: *backend-base
+    ports: [ "8004:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_C
+      STATE_NAME: Karnataka
+
+  state-d:
+    <<: *backend-base
+    ports: [ "8006:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_D
+      STATE_NAME: Kerala
+
+  state-e:
+    <<: *backend-base
+    ports: [ "8008:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_E
+      STATE_NAME: Tamil Nadu
+
+  state-f:
+    <<: *backend-base
+    ports: [ "8010:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_F
+      STATE_NAME: Gujarat
+
+  state-g:
+    <<: *backend-base
+    ports: [ "8012:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_G
+      STATE_NAME: Rajasthan
+
+  state-h:
+    <<: *backend-base
+    ports: [ "8014:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_H
+      STATE_NAME: Uttar Pradesh
+
+  state-i:
+    <<: *backend-base
+    ports: [ "8016:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_I
+      STATE_NAME: Madhya Pradesh
+
+  state-j:
+    <<: *backend-base
+    ports: [ "8018:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_J
+      STATE_NAME: West Bengal
+
+  state-k:
+    <<: *backend-base
+    ports: [ "8020:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_K
+      STATE_NAME: Bihar
+
+  state-l:
+    <<: *backend-base
+    ports: [ "8022:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_L
+      STATE_NAME: Punjab
+
+  state-m:
+    <<: *backend-base
+    ports: [ "8024:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_M
+      STATE_NAME: Haryana
+
+  state-n:
+    <<: *backend-base
+    ports: [ "8026:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_N
+      STATE_NAME: Assam
+
+  state-o:
+    <<: *backend-base
+    ports: [ "8028:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_O
+      STATE_NAME: Odisha
+
+  state-p:
+    <<: *backend-base
+    ports: [ "8030:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_P
+      STATE_NAME: Chhattisgarh
+
+  state-q:
+    <<: *backend-base
+    ports: [ "8032:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_Q
+      STATE_NAME: Jharkhand
+
+  state-r:
+    <<: *backend-base
+    ports: [ "8034:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_R
+      STATE_NAME: Uttarakhand
+
+  state-s:
+    <<: *backend-base
+    ports: [ "8036:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_S
+      STATE_NAME: Himachal Pradesh
+
+  state-t:
+    <<: *backend-base
+    ports: [ "8038:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_T
+      STATE_NAME: Tripura
+
+  state-u:
+    <<: *backend-base
+    ports: [ "8040:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_U
+      STATE_NAME: Meghalaya
+
+  state-v:
+    <<: *backend-base
+    ports: [ "8042:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_V
+      STATE_NAME: Manipur
+
+  state-w:
+    <<: *backend-base
+    ports: [ "8044:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_W
+      STATE_NAME: Nagaland
+
+  state-x:
+    <<: *backend-base
+    ports: [ "8046:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_X
+      STATE_NAME: Goa
+
+  state-y:
+    <<: *backend-base
+    ports: [ "8048:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_Y
+      STATE_NAME: Arunachal Pradesh
+
+  state-z:
+    <<: *backend-base
+    ports: [ "8050:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_Z
+      STATE_NAME: Mizoram
+
+  state-aa:
+    <<: *backend-base
+    ports: [ "8052:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_AA
+      STATE_NAME: Sikkim
+
+  state-ab:
+    <<: *backend-base
+    ports: [ "8054:8000" ]
+    environment:
+      <<: *backend-base.environment
+      STATE_ID: STATE_AB
+      STATE_NAME: Telangana

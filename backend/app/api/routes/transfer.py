@@ -36,8 +36,11 @@ async def transfer_voter(
     current_owner = latest_tx.get('state') or latest_tx.get('owner_state')
     
     # Check ownership
-    if current_owner != from_state and current_owner != to_state:
-         print(f"⚠️ Transfer Warning: Blockchain owner is {current_owner}, expected {from_state}")
+    if current_owner != from_state:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Transfer failed: Voter is currently registered in {current_owner}, not {from_state}"
+        )
 
     # 2. Execute Transfer on Blockchain (CRITICAL STEP)
     tx_data = {

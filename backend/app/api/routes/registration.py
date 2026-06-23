@@ -141,11 +141,13 @@ async def register_voter(
             data=tx_data
         )
         
+        print(f"=====================================")
+        print(f"BLOCKCHAIN CLIENT RESPONSE: {bc_response}")
+        print(f"=====================================")
+        
         if not bc_response.get("success", True):
-            # If Blockchain fails, we technically have a "ghost" face in AI service,
-            # but that is better than a "ghost" voter in the DB.
-            # Ideally, we would call ai_dedup.delete_encoding(voter_id) here.
-            raise HTTPException(status_code=500, detail="Blockchain Node Rejected Transaction")
+            error_details = bc_response.get("error", "MOHIT_TEST_ERROR")
+            raise HTTPException(status_code=500, detail=f"MOHIT_DETAILS: {bc_response}")
             
         # Update with Transaction ID
         voter.blockchain_hash = data_hash
@@ -184,9 +186,17 @@ async def register_voter(
         # If anything failed, ensure no DB trace remains
         # Note: We haven't added to DB yet in most cases, but just in case
         db.rollback()
+        # Rollback AI encoding and photo
+        await ai_dedup.delete_face_encoding(voter_id)
+        if 'photo_path' in locals() and os.path.exists(photo_path):
+            os.remove(photo_path)
         raise e
     except Exception as e:
         db.rollback()
+        # Rollback AI encoding and photo
+        await ai_dedup.delete_face_encoding(voter_id)
+        if 'photo_path' in locals() and os.path.exists(photo_path):
+            os.remove(photo_path)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/status/{voter_id}")

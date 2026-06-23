@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
-import { ArrowLeftRight, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeftRight, CheckCircle, AlertCircle, Wifi } from 'lucide-react';
 import { api } from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useNetwork } from '../contexts/NetworkContext';
 
 export default function TransferPage() {
+  const { activeStates } = useNetwork();
+  
   const [voterId, setVoterId] = useState('');
-  const [fromState, setFromState] = useState('STATE_A');
-  const [toState, setToState] = useState('STATE_B');
+  const [fromState, setFromState] = useState('');
+  const [toState, setToState] = useState('');
+
+  useEffect(() => {
+    if (activeStates.length > 0) {
+      if (!fromState) setFromState(activeStates[0].id);
+      if (!toState && activeStates.length > 1) setToState(activeStates[1].id);
+      else if (!toState) setToState(activeStates[0].id);
+    }
+  }, [activeStates]);
   const [newAddress, setNewAddress] = useState({
     address_line1: '',
     address_line2: '',
@@ -23,6 +34,12 @@ export default function TransferPage() {
     e.preventDefault();
     setError(null);
     setIsProcessing(true);
+    
+    if (fromState === toState) {
+      setError("Source and Destination states cannot be the same.");
+      setIsProcessing(false);
+      return;
+    }
     
     try {
       const response = await api.transferVoter({
@@ -51,7 +68,7 @@ export default function TransferPage() {
           <CheckCircle className="w-20 h-20 text-green-600 mx-auto mb-6" />
           <h2 className="text-3xl font-bold mb-4">Transfer Successful!</h2>
           <p className="text-gray-600 mb-6">
-            Voter has been transferred from {fromState === 'STATE_A' ? 'Maharashtra' : 'Karnataka'} to {toState === 'STATE_A' ? 'Maharashtra' : 'Karnataka'}
+            Voter has been transferred from {activeStates.find(s => s.id === fromState)?.name} to {activeStates.find(s => s.id === toState)?.name}
           </p>
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <div className="text-sm text-gray-600 mb-1">Transaction ID</div>
@@ -108,25 +125,29 @@ export default function TransferPage() {
           
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">From State</label>
+              <label className="block text-sm font-medium mb-2">From State (Source)</label>
               <select
                 value={fromState}
                 onChange={(e) => setFromState(e.target.value)}
                 className="input-field"
+                disabled={activeStates.length === 0}
               >
-                <option value="STATE_A">Maharashtra</option>
-                <option value="STATE_B">Karnataka</option>
+                {activeStates.map(state => (
+                  <option key={state.id} value={state.id}>{state.name} (Port {state.port})</option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">To State</label>
+              <label className="block text-sm font-medium mb-2">To State (Destination)</label>
               <select
                 value={toState}
                 onChange={(e) => setToState(e.target.value)}
                 className="input-field"
+                disabled={activeStates.length === 0}
               >
-                <option value="STATE_A">Maharashtra</option>
-                <option value="STATE_B">Karnataka</option>
+                {activeStates.map(state => (
+                  <option key={state.id} value={state.id}>{state.name} (Port {state.port})</option>
+                ))}
               </select>
             </div>
           </div>

@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
-import { Vote, Upload, CheckCircle, AlertCircle, Shield } from 'lucide-react';
+import { Vote, Upload, CheckCircle, AlertCircle, Shield, Wifi } from 'lucide-react';
 import { api } from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useNetwork } from '../contexts/NetworkContext';
+import { ALL_STATES } from '../config/states';
 
 export default function VotingPage() {
+  const { activeStates } = useNetwork();
+  
   const [voterId, setVoterId] = useState('');
   const [pollingBoothId, setPollingBoothId] = useState('BOOTH_001');
-  const [selectedState, setSelectedState] = useState('STATE_A');
+  const [selectedState, setSelectedState] = useState('');
+
+  React.useEffect(() => {
+    if (activeStates.length > 0 && !selectedState) {
+      setSelectedState(activeStates[0].id);
+    }
+  }, [activeStates]);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState('');
   
@@ -100,29 +110,37 @@ export default function VotingPage() {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
             <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5" />
-            <p className="text-red-700">{error}</p>
+            <p className="text-red-700">
+              {error.includes("Voter has moved to STATE_") 
+                ? error.replace(/STATE_[A-Z]/g, match => ALL_STATES.find(s => s.id === match)?.name || match) 
+                : error}
+            </p>
           </div>
         )}
         
         {eligibility?.eligible && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-800 font-medium">✓ Eligible to vote</p>
-            <p className="text-green-700 text-sm mt-1">
-              {eligibility.name} - {eligibility.state}
-            </p>
+              {eligibility.name} - {ALL_STATES.find(s => s.id === eligibility.state)?.name || eligibility.state}
           </div>
         )}
         
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Polling State</label>
+            <label className="block text-sm font-medium mb-2">Polling State (Node)</label>
             <select
               value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
+              onChange={(e) => {
+                setSelectedState(e.target.value);
+                setError(null);
+                setEligibility(null);
+              }}
               className="input-field"
+              disabled={activeStates.length === 0}
             >
-              <option value="STATE_A">Maharashtra</option>
-              <option value="STATE_B">Karnataka</option>
+              {activeStates.map(state => (
+                <option key={state.id} value={state.id}>{state.name} (Port {state.port})</option>
+              ))}
             </select>
           </div>
           

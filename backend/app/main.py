@@ -17,6 +17,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+from app.core.events import pubsub_manager
+from app.core.listener import start_redis_listener
+import asyncio
+
+@app.on_event("startup")
+async def startup_event():
+    pubsub_manager.connect()
+    asyncio.create_task(start_redis_listener())
+
 # CORS
 app.add_middleware(
     CORSMiddleware,

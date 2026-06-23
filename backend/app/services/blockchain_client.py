@@ -17,10 +17,12 @@ class BlockchainClient:
         }
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.post(f"{self.node_url}/transactions/new", json=payload)
+                url = f"{self.node_url.rstrip('/')}/transactions/new"
+                response = await client.post(url, json=payload)
                 if response.status_code == 200:
                     return response.json()
-                return {"success": False, "error": "Blockchain node rejected transaction"}
+                logger.error(f"Blockchain Node Rejected: {response.status_code} - {response.text}")
+                return {"success": False, "error": f"Blockchain node rejected transaction: {response.status_code} - {response.text}"}
         except Exception as e:
             logger.error(f"Blockchain Connection Error: {str(e)}")
             return {"success": True, "transaction_hash": "OFFLINE", "block_index": -1}

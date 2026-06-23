@@ -8,12 +8,12 @@ import type {
   BlockchainBlock 
 } from '../types';
 
-const API_BASE_STATE_A = import.meta.env.VITE_BACKEND_STATE_A_URL || 'http://localhost:8001';
-const API_BASE_STATE_B = import.meta.env.VITE_BACKEND_STATE_B_URL || 'http://localhost:8002';
+import { ALL_STATES } from '../config/states';
 
 // Helper to get API base URL by state
 const getApiBase = (stateId: string) => {
-  return stateId === 'STATE_A' ? API_BASE_STATE_A : API_BASE_STATE_B;
+  const state = ALL_STATES.find(s => s.id === stateId);
+  return state ? state.url : 'http://127.0.0.1:8000';
 };
 
 export const api = {

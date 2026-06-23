@@ -14,8 +14,9 @@ scipy>=1.11.4
 pydantic>=2.5.3
 pydantic-settings>=2.1.0
 jellyfish>=1.0.3
-
-# Note: jellyfish is used for phonetic name matching (Soundex algorithm)
+sqlalchemy>=2.0.25
+psycopg2-binary>=2.9.9
+pgvector>=0.2.4
 # It's a pure Python library for approximate string matching
 
 ## Installation Order (for manual setup):
