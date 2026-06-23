@@ -1,2 +1,0 @@
-# mock-data/requirements.txt
-Faker==22.0.0
